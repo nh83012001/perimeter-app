@@ -1,0 +1,52 @@
+service: perimeter-app
+
+provider:
+  name: aws
+  profile: ${self:custom.accounts.${opt:acct}.profile}
+
+plugins:
+  - serverless-spa-deploy
+  - serverless-spa-config
+
+custom:
+  spa:
+    files:
+      - source: ./build
+        globs: '**/*'
+        headers:
+          CacheControl: max-age=300
+      - source: ./build
+        globs: 'index.html'
+        headers:
+          CacheControl: max-age=300 # 5 minutes
+  accounts:
+    dev:
+      debug: '*'
+      profile: dish
+     
+    stg:
+      debug: '*'
+      profile: dish
+     
+    prd:
+      debug: '*'
+      profile: dish
+     
+
+resources:
+  Resources:
+    WebsiteBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+
+  Outputs:
+    WebsiteBucketName:
+      Value:
+        Ref: WebsiteBucket
+    WebsiteURL:
+      Value:
+        Fn::GetAtt: [WebsiteBucket, WebsiteURL]
