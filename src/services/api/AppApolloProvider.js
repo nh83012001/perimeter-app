@@ -1,4 +1,4 @@
-import React, { createContext, useMemo } from 'react';
+import { createContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { ApolloProvider } from '@apollo/client';
 

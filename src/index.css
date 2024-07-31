@@ -15,5 +15,10 @@
 
 #map {
   width: 100%;
-  height: 100vh;
+  height: 50vh;
+}
+
+.mapbox-gl-draw_ctrl-draw-btn.active,
+.mapbox-gl-draw_ctrl-draw-btn.active:hover {
+  background-color: #FBB03B;
 }
