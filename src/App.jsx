@@ -1,17 +1,14 @@
 import './App.css';
 import { useQuery } from '@apollo/client';
-
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Box, Button, TextField, Paper, Typography } from '@mui/material';
-// import {
-//   CREATE_SESSION_SETTINGS,
-//   EDIT_SESSION_SETTINGS,
-//   CREATE_POLYGON,
-//   EDIT_POLYGON,
-//   DELETE_POLYGON,
-// } from './graphql/mutations';
+import { useCreatePolygon } from './hooks/useCreatePolygon';
+import // CREATE_POLYGON,
+// EDIT_POLYGON,
+// DELETE_POLYGON,
+'./graphql/mutations';
 
 import { GET_MAP_SESSION } from './graphql/queries';
 
@@ -19,6 +16,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
 const App = () => {
+  const { createPolygon } = useCreatePolygon();
   // TODO check for params in url for sessionID and fetch data from server
   const mapContainerRef = useRef();
   const mapRef = useRef();
@@ -26,23 +24,21 @@ const App = () => {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [nameInput, setNameInput] = useState('');
   const [originalFeature, setOriginalFeature] = useState(null);
-  const [history, setHistory] = useState({}); // story history of each polygons changes
+  const [sessionId, setSessionId] = useState(null);
+  const [urlSessionId, setUrlSessionId] = useState(null);
+  // const [history, setHistory] = useState({}); // story history of each polygons changes
 
-  // const [createSessionSettings] = useMutation(CREATE_SESSION_SETTINGS);
-  // const [editSessionSettings] = useMutation(EDIT_SESSION_SETTINGS);
-  // const [createPolygon] = useMutation(CREATE_POLYGON);
-  // const [editPolygon] = useMutation(EDIT_POLYGON);
-  // const [deletePolygon] = useMutation(DELETE_POLYGON);
-  console.log(GET_MAP_SESSION);
-  // const [getMapSession] = useQuery(GET_MAP_SESSION);
-  // console.log(getMapSession);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionIdFromUrl = params.get('sessionId');
+    setUrlSessionId(sessionIdFromUrl);
+  }, []); // Empty dependency array ensures this runs only once
 
-  // const { data: mapSessionData, refetch: refetchMapSession } = useQuery(
-  //   GET_MAP_SESSION,
-  //   {
-  //     skip: true, // Skip the query initially
-  //   }
-  // );
+  //TODO display the results of this query
+  const { data, loading, error } = useQuery(GET_MAP_SESSION, {
+    variables: { input: { sessionId: urlSessionId } },
+    skip: !urlSessionId, // Skip the query if sessionId is not available
+  });
 
   useEffect(() => {
     if (selectedFeature) {
@@ -51,23 +47,13 @@ const App = () => {
   }, [selectedFeature]);
 
   useEffect(() => {
-    // const urlParams = new URLSearchParams(window.location.search);
-    // const sessionId = urlParams.get('sessionID');
-    let defaultZoom = 6; // default zoom
-    let defaultCenter = [-122.3321, 47.6062]; // default center
+    // get the zoom and center from the url params or use default
+    const params = new URLSearchParams(window.location.search);
+    const sessionZoom = params.get('zoom');
+    const sessionCenter = params.get('center');
+    let defaultZoom = sessionZoom || 6; // default zoom
+    let defaultCenter = sessionCenter || [-122.3321, 47.6062]; // default center
 
-    // if (sessionId) {
-    //   // Fetch session data if sessionID is present in the URL
-    //   refetchMapSession({ sessionId }).then(({ data }) => {
-    //     if (data && data.getMapSession) {
-    //       const { center, zoom, features } = mapSessionData.getMapSession;
-    //       console.log(features);
-    //       defaultZoom = zoom;
-    //       defaultCenter = center;
-    //       // initializeMap(center, zoom, features);
-    //     }
-    //   });
-    // }
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
     if (mapContainerRef.current) {
@@ -77,8 +63,8 @@ const App = () => {
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/dark-v11',
-      center: defaultCenter, // this will be saved with the session
-      zoom: defaultZoom, // this will be saved with the session
+      center: defaultCenter,
+      zoom: defaultZoom,
     });
 
     // zoom control
@@ -86,7 +72,6 @@ const App = () => {
     mapRef.current.addControl(navControl, 'bottom-right');
 
     // polygon draw tool
-    // TODO
     const draw = new MapboxDraw({
       displayControlsDefault: false,
       controls: {
@@ -114,47 +99,72 @@ const App = () => {
 
     function updateArea(e) {
       // this could be new or old polygon
+
       const data = draw.getAll();
       if (data.features.length > 0) {
         // setSelectedFeature(e.features[0]);
-        const feature = e.features[0];
+
+        if (!sessionId) {
+          setSessionId(e.features[0].id); // set sessionId to the first polygons id
+        }
         if (e.features[0].properties?.name) {
           setNameInput(e.features[0].properties?.name);
         }
 
+        // const feature = e.features[0];
         //TODO need to ignore the initial create here
-        setHistory((prevHistory) => {
-          const newHistory = { ...prevHistory };
-          if (!newHistory[feature.id]) {
-            newHistory[feature.id] = [];
-          }
-          newHistory[feature.id].push({ ...feature });
-          return newHistory;
-        });
+        // setHistory((prevHistory) => {
+        //   const newHistory = { ...prevHistory };
+        //   if (!newHistory[feature.id]) {
+        //     newHistory[feature.id] = [];
+        //   }
+        //   newHistory[feature.id].push({ ...feature });
+        //   return newHistory;
+        // });
       }
     }
   }, []);
 
   // TODO there should be a better way to overwrite the feature name for the polygon than a delete/add
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     if (selectedFeature) {
       selectedFeature.properties.name = nameInput;
       drawRef.current.delete(selectedFeature.id); // delete old feature and put in new one with updated name
       drawRef.current.add(selectedFeature); // add new feature with updated name
       console.log(selectedFeature);
+
+      // coordinates: [[[Float]]]
+      const input = {
+        sessionId: sessionId,
+        polygonId: selectedFeature.id,
+        name: nameInput,
+      };
+      const res = await createPolygon(input);
+      console.log('response from creating polygon', res);
+
+      // const { data, loading, error } = useMutation(CREATE_POLYGON, {
+      //   variables: {
+      //     input: {
+      //       sessionId: sessionId,
+      //       polygonId: selectedFeature.id,
+      //       name: nameInput,
+      //     },
+      //   },
+      //   skip: !urlSessionId, // Skip the query if sessionId is not available
+      // });
     }
   };
 
   const handleDelete = () => {
     if (selectedFeature) {
-      setHistory((prevHistory) => {
-        const newHistory = { ...prevHistory };
-        if (!newHistory[selectedFeature.id]) {
-          newHistory[selectedFeature.id] = [];
-        }
-        newHistory[selectedFeature.id].push({ ...selectedFeature });
-        return newHistory;
-      });
+      // setHistory((prevHistory) => {
+      //   const newHistory = { ...prevHistory };
+      //   if (!newHistory[selectedFeature.id]) {
+      //     newHistory[selectedFeature.id] = [];
+      //   }
+      //   newHistory[selectedFeature.id].push({ ...selectedFeature });
+      //   return newHistory;
+      // });
       drawRef.current.delete(selectedFeature.id);
       setSelectedFeature(null);
       setNameInput('');
@@ -179,11 +189,11 @@ const App = () => {
       history[selectedFeature.id].length > 0
     ) {
       const previousState = history[selectedFeature.id].pop();
-      setHistory((prevHistory) => ({
-        ...prevHistory,
-        [selectedFeature.id]: [...prevHistory[selectedFeature.id]],
-      }));
-      setHistory([...history]);
+      // setHistory((prevHistory) => ({
+      //   ...prevHistory,
+      //   [selectedFeature.id]: [...prevHistory[selectedFeature.id]],
+      // }));
+      // setHistory([...history]);
       drawRef.current.delete(selectedFeature.id);
       drawRef.current.add(previousState);
       setSelectedFeature(previousState);
@@ -191,9 +201,26 @@ const App = () => {
     }
   };
 
+  const generateShareLink = () => {
+    const sessionId = '1234';
+    const zoom = mapRef.current ? mapRef.current.getZoom() : 6; // Default zoom if mapRef is not initialized
+    const center = mapRef.current
+      ? mapRef.current.getCenter().toArray()
+      : [-122.3321, 47.6062]; // Default center if mapRef is not initialized
+    const shareLink = `${window.location.origin}${
+      window.location.pathname
+    }?sessionID=${sessionId}&zoom=${zoom}&center=${center.join(',')}`;
+    return shareLink;
+  };
+
   return (
     <>
       <div ref={mapContainerRef} id="map" style={{ height: '90vh' }}></div>
+      <div style={{ position: 'absolute', bottom: 20, left: 70 }}>
+        <Typography variant="body2">
+          Share this map: <a href={generateShareLink()}>Link</a>
+        </Typography>
+      </div>
       {selectedFeature && (
         <Paper
           elevation={3}

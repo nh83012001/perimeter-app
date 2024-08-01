@@ -2,7 +2,7 @@
 import { gql } from '@apollo/client';
 
 export const GET_MAP_SESSION = gql`
-  query getMapSession($input: String!) {
+  query getMapSession($input: GetMapSessionInput!) {
     getMapSession(input: $input) {
       sessionId
       polygons {
