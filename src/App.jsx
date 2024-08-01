@@ -1,17 +1,17 @@
 import './App.css';
-import { useMutation, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Box, Button, TextField, Paper, Typography } from '@mui/material';
-import {
-  CREATE_SESSION_SETTINGS,
-  EDIT_SESSION_SETTINGS,
-  CREATE_POLYGON,
-  EDIT_POLYGON,
-  DELETE_POLYGON,
-} from './graphql/mutations';
+// import {
+//   CREATE_SESSION_SETTINGS,
+//   EDIT_SESSION_SETTINGS,
+//   CREATE_POLYGON,
+//   EDIT_POLYGON,
+//   DELETE_POLYGON,
+// } from './graphql/mutations';
 
 import { GET_MAP_SESSION } from './graphql/queries';
 
@@ -33,15 +33,16 @@ const App = () => {
   // const [createPolygon] = useMutation(CREATE_POLYGON);
   // const [editPolygon] = useMutation(EDIT_POLYGON);
   // const [deletePolygon] = useMutation(DELETE_POLYGON);
+  console.log(GET_MAP_SESSION);
+  // const [getMapSession] = useQuery(GET_MAP_SESSION);
+  // console.log(getMapSession);
 
-  const [getMapSession] = useQuery(GET_MAP_SESSION);
-
-  const { data: mapSessionData, refetch: refetchMapSession } = useQuery(
-    GET_MAP_SESSION,
-    {
-      skip: true, // Skip the query initially
-    }
-  );
+  // const { data: mapSessionData, refetch: refetchMapSession } = useQuery(
+  //   GET_MAP_SESSION,
+  //   {
+  //     skip: true, // Skip the query initially
+  //   }
+  // );
 
   useEffect(() => {
     if (selectedFeature) {
@@ -50,23 +51,23 @@ const App = () => {
   }, [selectedFeature]);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('sessionID');
+    // const urlParams = new URLSearchParams(window.location.search);
+    // const sessionId = urlParams.get('sessionID');
     let defaultZoom = 6; // default zoom
     let defaultCenter = [-122.3321, 47.6062]; // default center
 
-    if (sessionId) {
-      // Fetch session data if sessionID is present in the URL
-      refetchMapSession({ sessionId }).then(({ data }) => {
-        if (data && data.getMapSession) {
-          const { center, zoom, features } = mapSessionData.getMapSession;
-          console.log(features);
-          defaultZoom = zoom;
-          defaultCenter = center;
-          // initializeMap(center, zoom, features);
-        }
-      });
-    }
+    // if (sessionId) {
+    //   // Fetch session data if sessionID is present in the URL
+    //   refetchMapSession({ sessionId }).then(({ data }) => {
+    //     if (data && data.getMapSession) {
+    //       const { center, zoom, features } = mapSessionData.getMapSession;
+    //       console.log(features);
+    //       defaultZoom = zoom;
+    //       defaultCenter = center;
+    //       // initializeMap(center, zoom, features);
+    //     }
+    //   });
+    // }
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
     if (mapContainerRef.current) {
@@ -76,8 +77,8 @@ const App = () => {
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/dark-v11',
-      center: defaultZoom, // this will be saved with the session
-      zoom: defaultCenter, // this will be saved with the session
+      center: defaultCenter, // this will be saved with the session
+      zoom: defaultZoom, // this will be saved with the session
     });
 
     // zoom control

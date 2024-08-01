@@ -11,6 +11,7 @@
     "deploy:dev": "sls deploy -v -r us-east-1 -s dev --acct dev"
   },
   "dependencies": {
+    "@apollo/client": "^3.11.2",
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
