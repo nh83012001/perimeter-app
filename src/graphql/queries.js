@@ -7,14 +7,8 @@ export const GET_MAP_SESSION = gql`
       sessionId
       polygons {
         polygonId
-        type
-        properties {
-          name
-        }
-        geometry {
-          coordinates
-          type
-        }
+        name
+        coordinates
       }
     }
   }
