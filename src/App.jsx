@@ -5,11 +5,6 @@ import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Box, Button, TextField, Paper, Typography } from '@mui/material';
 import { useCreatePolygon } from './hooks/useCreatePolygon';
-import // CREATE_POLYGON,
-// EDIT_POLYGON,
-// DELETE_POLYGON,
-'./graphql/mutations';
-
 import { GET_MAP_SESSION } from './graphql/queries';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -27,10 +22,19 @@ const App = () => {
   const [sessionId, setSessionId] = useState(null);
   const [urlSessionId, setUrlSessionId] = useState(null);
   // const [history, setHistory] = useState({}); // story history of each polygons changes
+  const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
+
+  function updateSessionId(initialPolygonId) {
+    if (!sessionIdSetRef.current) {
+      setSessionId(initialPolygonId);
+      sessionIdSetRef.current = true; // Mark sessionId as set
+    }
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionIdFromUrl = params.get('sessionId');
+    console.log(sessionIdFromUrl);
     setUrlSessionId(sessionIdFromUrl);
   }, []); // Empty dependency array ensures this runs only once
 
@@ -39,6 +43,8 @@ const App = () => {
     variables: { input: { sessionId: urlSessionId } },
     skip: !urlSessionId, // Skip the query if sessionId is not available
   });
+
+  console.log(data);
 
   useEffect(() => {
     if (selectedFeature) {
@@ -51,14 +57,38 @@ const App = () => {
     const params = new URLSearchParams(window.location.search);
     const sessionZoom = params.get('zoom');
     const sessionCenter = params.get('center');
+    const sessionCenterArray = sessionCenter ? sessionCenter.split(',') : null;
     let defaultZoom = sessionZoom || 6; // default zoom
-    let defaultCenter = sessionCenter || [-122.3321, 47.6062]; // default center
+    let defaultCenter = sessionCenterArray || [-122.3321, 47.6062]; // default center
 
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
     if (mapContainerRef.current) {
       mapContainerRef.current.innerHTML = '';
     }
+    let geoJsonData = null;
+    if (data && data.getMapSession) {
+      const { polygons } = data.getMapSession;
+      console.log('polygons', polygons);
+      if (polygons.length > 0) {
+        geoJsonData = {
+          type: 'FeatureCollection',
+          features: polygons.map((polygon) => ({
+            type: 'Feature',
+            properties: {
+              polygonId: polygon.polygonId,
+              name: polygon.name,
+            },
+            geometry: {
+              type: 'Polygon',
+              coordinates: [polygon.coordinates],
+            },
+          })),
+        };
+        console.log('geoJsonData', geoJsonData);
+      }
+    }
+    console.log('geoJsonData', geoJsonData);
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -80,6 +110,33 @@ const App = () => {
       },
       defaultMode: 'draw_polygon',
     });
+
+    if (geoJsonData) {
+      mapRef.current.on('load', () => {
+        // if (!mapRef.current.getSource('polygons')) {
+        console.log('inside the load');
+        console.log(geoJsonData);
+        mapRef.current.addSource('polygons', {
+          type: 'geojson',
+          data: geoJsonData,
+        });
+
+        mapRef.current.addLayer({
+          id: 'polygons-layer',
+          type: 'fill',
+          source: 'polygons',
+          layout: {},
+          paint: {
+            'fill-color': '#888888',
+            'fill-opacity': 0.4,
+          },
+        });
+        // }
+
+        drawRef.current.add(geoJsonData);
+      });
+    }
+
     drawRef.current = draw;
     mapRef.current.addControl(draw);
 
@@ -105,7 +162,7 @@ const App = () => {
         // setSelectedFeature(e.features[0]);
 
         if (!sessionId) {
-          setSessionId(e.features[0].id); // set sessionId to the first polygons id
+          updateSessionId(e.features[0].id);
         }
         if (e.features[0].properties?.name) {
           setNameInput(e.features[0].properties?.name);
@@ -123,7 +180,7 @@ const App = () => {
         // });
       }
     }
-  }, []);
+  }, [sessionId, data]);
 
   // TODO there should be a better way to overwrite the feature name for the polygon than a delete/add
   const handleSaveName = async () => {
@@ -131,27 +188,14 @@ const App = () => {
       selectedFeature.properties.name = nameInput;
       drawRef.current.delete(selectedFeature.id); // delete old feature and put in new one with updated name
       drawRef.current.add(selectedFeature); // add new feature with updated name
-      console.log(selectedFeature);
-
-      // coordinates: [[[Float]]]
       const input = {
         sessionId: sessionId,
         polygonId: selectedFeature.id,
         name: nameInput,
+        coordinates: selectedFeature.geometry.coordinates[0],
       };
-      const res = await createPolygon(input);
-      console.log('response from creating polygon', res);
 
-      // const { data, loading, error } = useMutation(CREATE_POLYGON, {
-      //   variables: {
-      //     input: {
-      //       sessionId: sessionId,
-      //       polygonId: selectedFeature.id,
-      //       name: nameInput,
-      //     },
-      //   },
-      //   skip: !urlSessionId, // Skip the query if sessionId is not available
-      // });
+      await createPolygon(input);
     }
   };
 
@@ -202,14 +246,13 @@ const App = () => {
   };
 
   const generateShareLink = () => {
-    const sessionId = '1234';
     const zoom = mapRef.current ? mapRef.current.getZoom() : 6; // Default zoom if mapRef is not initialized
     const center = mapRef.current
       ? mapRef.current.getCenter().toArray()
       : [-122.3321, 47.6062]; // Default center if mapRef is not initialized
     const shareLink = `${window.location.origin}${
       window.location.pathname
-    }?sessionID=${sessionId}&zoom=${zoom}&center=${center.join(',')}`;
+    }?sessionId=${sessionId}&zoom=${zoom}&center=${center.join(',')}`;
     return shareLink;
   };
 
