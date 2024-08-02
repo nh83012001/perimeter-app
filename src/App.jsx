@@ -3,8 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Box, Button, TextField, Paper, Typography } from '@mui/material';
-import { useCreatePolygon } from './hooks/useCreatePolygon';
-import { useEditPolygon } from './hooks/useEditPolygon';
+import { useCreateOrUpdatePolygon } from './hooks/useCreateOrUpdatePolygon';
 import { useDeletePolygon } from './hooks/useDeletePolygon';
 import { useGetMapSession } from './hooks/useGetMapSession';
 
@@ -12,8 +11,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
 const App = () => {
-  const { createPolygon } = useCreatePolygon();
-  const { editPolygon } = useEditPolygon();
+  const { createOrUpdatePolygon } = useCreateOrUpdatePolygon();
   const { deletePolygon } = useDeletePolygon();
   const { getMapSession } = useGetMapSession();
   // TODO check for params in url for sessionID and fetch data from server
@@ -36,8 +34,6 @@ const App = () => {
       sessionIdSetRef.current = true; // Mark sessionId as set
     }
   }
-  console.log('selectedFeatrue', selectedFeatures);
-  console.log('originalFeature', originalFeature);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -122,9 +118,6 @@ const App = () => {
 
     if (geoJsonData) {
       mapRef.current.on('load', () => {
-        // if (!mapRef.current.getSource('polygons')) {
-        console.log('inside the load');
-        console.log(geoJsonData);
         mapRef.current.addSource('polygons', {
           type: 'geojson',
           data: geoJsonData,
@@ -150,12 +143,11 @@ const App = () => {
     mapRef.current.addControl(draw);
 
     mapRef.current.on('draw.create', updateArea);
-    // mapRef.current.on('draw.delete', updateArea);
     mapRef.current.on('draw.update', updateArea);
-    // mapRef.current.on('draw.update', setHasChanges(true));
 
     mapRef.current.on('draw.selectionchange', (e) => {
-      console.log('***selectionchange', e);
+      const allFeatures = drawRef.current.getAll().features;
+      console.log('allFeatures = ', allFeatures);
       if (e.features.length > 0) {
         setSelectedFeatures(e.features);
         setNameInput(e.features[0].properties?.name || '');
@@ -167,24 +159,16 @@ const App = () => {
 
     function updateArea(e) {
       // this could be new or old polygon
-      if (e.features[0].properties.saved) {
-        setHasChanges(true);
-        console.log('***this is a saved polygon');
-      } else {
-        setHasChanges(true);
-      }
-
+      setHasChanges(true);
       const data = draw.getAll();
       if (data.features.length > 0) {
         setSelectedFeatures(e.features);
-
         if (!sessionId) {
           updateSessionId(e.features[0].id);
         }
         if (e.features[0].properties?.name && selectedFeatures.length === 1) {
           setNameInput(e.features[0].properties?.name);
         }
-
         // const feature = e.features[0];
         //TODO need to ignore the initial create here
         // setHistory((prevHistory) => {
@@ -212,9 +196,8 @@ const App = () => {
         name: nameInput,
         coordinates: selectedFeatures[0].geometry.coordinates[0],
       };
-
-      console.log('input for create polygon', input);
-      await createPolygon(input);
+      await createOrUpdatePolygon(input);
+      setHasChanges(false);
     }
   };
 

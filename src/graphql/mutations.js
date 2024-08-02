@@ -1,15 +1,9 @@
 // eslint-disable
 import { gql } from '@apollo/client';
 
-export const CREATE_POLYGON = gql`
-  mutation createPolygon($input: CreatePolygonInput!) {
-    createPolygon(input: $input)
-  }
-`;
-
-export const EDIT_POLYGON = gql`
-  mutation editPolygon($input: EditPolygonInput!) {
-    editPolygon(input: $input)
+export const CREATE_OR_UPDATE_POLYGON = gql`
+  mutation createOrUpdatePolygon($input: CreateOrUpdatePolygonInput!) {
+    createOrUpdatePolygon(input: $input)
   }
 `;
 
