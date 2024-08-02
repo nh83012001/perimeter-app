@@ -1,26 +1,30 @@
 import './App.css';
-import { useQuery } from '@apollo/client';
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { Box, Button, TextField, Paper, Typography } from '@mui/material';
 import { useCreatePolygon } from './hooks/useCreatePolygon';
-import { GET_MAP_SESSION } from './graphql/queries';
+import { useEditPolygon } from './hooks/useEditPolygon';
+import { useDeletePolygon } from './hooks/useDeletePolygon';
+import { useGetMapSession } from './hooks/useGetMapSession';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
 const App = () => {
   const { createPolygon } = useCreatePolygon();
+  const { editPolygon } = useEditPolygon();
+  const { deletePolygon } = useDeletePolygon();
+  const { getMapSession } = useGetMapSession();
   // TODO check for params in url for sessionID and fetch data from server
   const mapContainerRef = useRef();
   const mapRef = useRef();
   const drawRef = useRef();
   const [selectedFeature, setSelectedFeature] = useState(null);
-  const [nameInput, setNameInput] = useState('');
   const [originalFeature, setOriginalFeature] = useState(null);
+  const [nameInput, setNameInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
-  const [urlSessionId, setUrlSessionId] = useState(null);
+  const [mapData, setMapData] = useState(null);
   // const [history, setHistory] = useState({}); // story history of each polygons changes
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
@@ -30,21 +34,23 @@ const App = () => {
       sessionIdSetRef.current = true; // Mark sessionId as set
     }
   }
+  console.log('selectedFeatrue', selectedFeature);
+  console.log('originalFeature', originalFeature);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionIdFromUrl = params.get('sessionId');
-    console.log(sessionIdFromUrl);
-    setUrlSessionId(sessionIdFromUrl);
+    setSessionId(sessionIdFromUrl);
+
+    const fetchMapSession = async () => {
+      const input = { sessionId: sessionIdFromUrl };
+      const response = await getMapSession(input);
+      setMapData(response.data);
+    };
+    if (sessionIdFromUrl) {
+      fetchMapSession();
+    }
   }, []); // Empty dependency array ensures this runs only once
-
-  //TODO display the results of this query
-  const { data, loading, error } = useQuery(GET_MAP_SESSION, {
-    variables: { input: { sessionId: urlSessionId } },
-    skip: !urlSessionId, // Skip the query if sessionId is not available
-  });
-
-  console.log(data);
 
   useEffect(() => {
     if (selectedFeature) {
@@ -67,8 +73,8 @@ const App = () => {
       mapContainerRef.current.innerHTML = '';
     }
     let geoJsonData = null;
-    if (data && data.getMapSession) {
-      const { polygons } = data.getMapSession;
+    if (mapData && mapData.getMapSession) {
+      const { polygons } = mapData.getMapSession;
       console.log('polygons', polygons);
       if (polygons.length > 0) {
         geoJsonData = {
@@ -159,7 +165,7 @@ const App = () => {
 
       const data = draw.getAll();
       if (data.features.length > 0) {
-        // setSelectedFeature(e.features[0]);
+        setSelectedFeature(e.features[0]);
 
         if (!sessionId) {
           updateSessionId(e.features[0].id);
@@ -180,7 +186,7 @@ const App = () => {
         // });
       }
     }
-  }, [sessionId, data]);
+  }, [mapData]);
 
   // TODO there should be a better way to overwrite the feature name for the polygon than a delete/add
   const handleSaveName = async () => {
@@ -195,11 +201,12 @@ const App = () => {
         coordinates: selectedFeature.geometry.coordinates[0],
       };
 
+      console.log('input for create polygon', input);
       await createPolygon(input);
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedFeature) {
       // setHistory((prevHistory) => {
       //   const newHistory = { ...prevHistory };
@@ -209,7 +216,18 @@ const App = () => {
       //   newHistory[selectedFeature.id].push({ ...selectedFeature });
       //   return newHistory;
       // });
+      const input = {
+        sessionId,
+        polygonId: selectedFeature.properties.polygonId,
+      };
+      await deletePolygon(input);
       drawRef.current.delete(selectedFeature.id);
+      const updatedData = drawRef.current.getAll();
+
+      // Update the source data of the map to remove the visual remnants
+      if (mapRef.current.getSource('polygons')) {
+        mapRef.current.getSource('polygons').setData(updatedData);
+      }
       setSelectedFeature(null);
       setNameInput('');
     }
