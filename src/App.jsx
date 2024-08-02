@@ -261,7 +261,10 @@ const App = () => {
       <div ref={mapContainerRef} id="map" style={{ height: '90vh' }}></div>
       <div style={{ position: 'absolute', bottom: 20, left: 70 }}>
         <Typography variant="body2">
-          Share this map: <a href={generateShareLink()}>Link</a>
+          Share this map:{' '}
+          <a target="_blank" href={generateShareLink()}>
+            Link
+          </a>
         </Typography>
       </div>
       {selectedFeature && (
