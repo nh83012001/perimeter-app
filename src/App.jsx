@@ -20,11 +20,13 @@ const App = () => {
   const mapContainerRef = useRef();
   const mapRef = useRef();
   const drawRef = useRef();
-  const [selectedFeature, setSelectedFeature] = useState(null);
+  const [selectedFeatures, setSelectedFeatures] = useState([]);
   const [originalFeature, setOriginalFeature] = useState(null);
   const [nameInput, setNameInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
   const [mapData, setMapData] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
+
   // const [history, setHistory] = useState({}); // story history of each polygons changes
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
@@ -34,7 +36,7 @@ const App = () => {
       sessionIdSetRef.current = true; // Mark sessionId as set
     }
   }
-  console.log('selectedFeatrue', selectedFeature);
+  console.log('selectedFeatrue', selectedFeatures);
   console.log('originalFeature', originalFeature);
 
   useEffect(() => {
@@ -53,10 +55,10 @@ const App = () => {
   }, []); // Empty dependency array ensures this runs only once
 
   useEffect(() => {
-    if (selectedFeature) {
-      setOriginalFeature({ ...selectedFeature });
+    if (selectedFeatures) {
+      setOriginalFeature({ ...selectedFeatures[0] });
     }
-  }, [selectedFeature]);
+  }, [selectedFeatures]);
 
   useEffect(() => {
     // get the zoom and center from the url params or use default
@@ -84,6 +86,7 @@ const App = () => {
             properties: {
               polygonId: polygon.polygonId,
               name: polygon.name,
+              saved: true,
             },
             geometry: {
               type: 'Polygon',
@@ -149,28 +152,36 @@ const App = () => {
     mapRef.current.on('draw.create', updateArea);
     // mapRef.current.on('draw.delete', updateArea);
     mapRef.current.on('draw.update', updateArea);
+    // mapRef.current.on('draw.update', setHasChanges(true));
 
     mapRef.current.on('draw.selectionchange', (e) => {
+      console.log('***selectionchange', e);
       if (e.features.length > 0) {
-        setSelectedFeature(e.features[0]);
+        setSelectedFeatures(e.features);
         setNameInput(e.features[0].properties?.name || '');
       } else {
-        setSelectedFeature(null);
+        setSelectedFeatures([]);
         setNameInput('');
       }
     });
 
     function updateArea(e) {
       // this could be new or old polygon
+      if (e.features[0].properties.saved) {
+        setHasChanges(true);
+        console.log('***this is a saved polygon');
+      } else {
+        setHasChanges(true);
+      }
 
       const data = draw.getAll();
       if (data.features.length > 0) {
-        setSelectedFeature(e.features[0]);
+        setSelectedFeatures(e.features);
 
         if (!sessionId) {
           updateSessionId(e.features[0].id);
         }
-        if (e.features[0].properties?.name) {
+        if (e.features[0].properties?.name && selectedFeatures.length === 1) {
           setNameInput(e.features[0].properties?.name);
         }
 
@@ -189,16 +200,17 @@ const App = () => {
   }, [mapData]);
 
   // TODO there should be a better way to overwrite the feature name for the polygon than a delete/add
-  const handleSaveName = async () => {
-    if (selectedFeature) {
-      selectedFeature.properties.name = nameInput;
-      drawRef.current.delete(selectedFeature.id); // delete old feature and put in new one with updated name
-      drawRef.current.add(selectedFeature); // add new feature with updated name
+  const handleSave = async () => {
+    if (selectedFeatures) {
+      selectedFeatures[0].properties.name = nameInput;
+      selectedFeatures[0].properties.saved = true;
+      drawRef.current.delete(selectedFeatures[0].id); // delete old feature and put in new one with updated name
+      drawRef.current.add(selectedFeatures[0]); // add new feature with updated name
       const input = {
         sessionId: sessionId,
-        polygonId: selectedFeature.id,
+        polygonId: selectedFeatures[0].id,
         name: nameInput,
-        coordinates: selectedFeature.geometry.coordinates[0],
+        coordinates: selectedFeatures[0].geometry.coordinates[0],
       };
 
       console.log('input for create polygon', input);
@@ -207,61 +219,59 @@ const App = () => {
   };
 
   const handleDelete = async () => {
-    if (selectedFeature) {
-      // setHistory((prevHistory) => {
-      //   const newHistory = { ...prevHistory };
-      //   if (!newHistory[selectedFeature.id]) {
-      //     newHistory[selectedFeature.id] = [];
-      //   }
-      //   newHistory[selectedFeature.id].push({ ...selectedFeature });
-      //   return newHistory;
-      // });
-      const input = {
-        sessionId,
-        polygonId: selectedFeature.properties.polygonId,
-      };
-      await deletePolygon(input);
-      drawRef.current.delete(selectedFeature.id);
+    if (selectedFeatures.length > 0) {
+      selectedFeatures.forEach(async (feature) => {
+        const polygonId = feature.properties.polygonId
+          ? feature.properties.polygonId // Previously saved and fetched
+          : feature.id; // new polygon you created
+        const input = {
+          sessionId,
+          polygonId: polygonId,
+        };
+        await deletePolygon(input);
+        drawRef.current.delete(feature.id);
+      });
+
       const updatedData = drawRef.current.getAll();
 
       // Update the source data of the map to remove the visual remnants
       if (mapRef.current.getSource('polygons')) {
         mapRef.current.getSource('polygons').setData(updatedData);
       }
-      setSelectedFeature(null);
+      setSelectedFeatures([]);
       setNameInput('');
     }
   };
 
   // true will enable save button
-  const hasChanges = () => {
-    if (!selectedFeature || !originalFeature) return false;
-    return (
-      nameInput !== originalFeature.properties.name ||
-      JSON.stringify(selectedFeature.geometry.coordinates) !==
-        JSON.stringify(originalFeature.geometry.coordinates)
-    );
-  };
+  // const hasChanges = () => {
+  //   if (!selectedFeature || !originalFeature) return false;
+  //   return (
+  //     nameInput !== originalFeature.properties.name ||
+  //     JSON.stringify(selectedFeature.geometry.coordinates) !==
+  //       JSON.stringify(originalFeature.geometry.coordinates)
+  //   );
+  // };
 
   // undo last change to currently selected polygon
-  const handleUndo = () => {
-    if (
-      selectedFeature &&
-      history[selectedFeature.id] &&
-      history[selectedFeature.id].length > 0
-    ) {
-      const previousState = history[selectedFeature.id].pop();
-      // setHistory((prevHistory) => ({
-      //   ...prevHistory,
-      //   [selectedFeature.id]: [...prevHistory[selectedFeature.id]],
-      // }));
-      // setHistory([...history]);
-      drawRef.current.delete(selectedFeature.id);
-      drawRef.current.add(previousState);
-      setSelectedFeature(previousState);
-      setNameInput(previousState.properties.name || '');
-    }
-  };
+  // const handleUndo = () => {
+  //   if (
+  //     selectedFeatures &&
+  //     history[selectedFeatures[0].id] &&
+  //     history[selectedFeatures[0].id].length > 0
+  //   ) {
+  //     const previousState = history[selectedFeatures[0].id].pop();
+  //     // setHistory((prevHistory) => ({
+  //     //   ...prevHistory,
+  //     //   [selectedFeature.id]: [...prevHistory[selectedFeature.id]],
+  //     // }));
+  //     // setHistory([...history]);
+  //     drawRef.current.delete(selectedFeatures[0].id);
+  //     drawRef.current.add(previousState);
+  //     setSelectedFeatures(previousState);
+  //     setNameInput(previousState.properties.name || '');
+  //   }
+  // };
 
   const generateShareLink = () => {
     const zoom = mapRef.current ? mapRef.current.getZoom() : 6; // Default zoom if mapRef is not initialized
@@ -285,7 +295,8 @@ const App = () => {
           </a>
         </Typography>
       </div>
-      {selectedFeature && (
+
+      {selectedFeatures.length > 1 && (
         <Paper
           elevation={3}
           style={{
@@ -297,12 +308,24 @@ const App = () => {
             width: 300,
           }}
         >
-          {selectedFeature && (
-            <Typography variant="body2">
-              Coordinates Length:{' '}
-              {selectedFeature.geometry.coordinates[0].length - 1}
-            </Typography>
-          )}
+          <Button variant="contained" color="primary" onClick={handleDelete}>
+            Delete Multiple
+          </Button>
+        </Paper>
+      )}
+
+      {selectedFeatures.length === 1 && (
+        <Paper
+          elevation={3}
+          style={{
+            position: 'absolute',
+            bottom: 70,
+            left: 70,
+            padding: 15,
+            backgroundColor: 'white',
+            width: 300,
+          }}
+        >
           <br />
           <TextField
             fullWidth
@@ -318,8 +341,8 @@ const App = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleUndo}
-              disabled={history.length === 0}
+              onClick={() => console.log('undo')}
+              disabled={!hasChanges}
             >
               Undo
             </Button>
@@ -329,8 +352,8 @@ const App = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleSaveName}
-              disabled={!hasChanges() || nameInput === ''}
+              onClick={handleSave}
+              disabled={!hasChanges || nameInput === ''}
             >
               Save
             </Button>

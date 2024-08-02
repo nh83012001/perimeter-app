@@ -2,7 +2,7 @@ service: perimeter-app
 
 provider:
   name: aws
-  profile: ${self:custom.accounts.${opt:acct}.profile}
+  profile: dish
 
 plugins:
   - serverless-spa-deploy
@@ -23,22 +23,12 @@ custom:
     dev:
       debug: '*'
       profile: dish
-     
-    stg:
-      debug: '*'
-      profile: dish
-     
-    prd:
-      debug: '*'
-      profile: dish
-     
 
 resources:
   Resources:
     WebsiteBucket:
       Type: AWS::S3::Bucket
       Properties:
-        AccessControl: PublicRead
         WebsiteConfiguration:
           IndexDocument: index.html
           ErrorDocument: index.html
