@@ -22,3 +22,6 @@
 .mapbox-gl-draw_ctrl-draw-btn.active:hover {
   background-color: #FBB03B;
 }
+a {
+  color: #FBB03B;
+}
