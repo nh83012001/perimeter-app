@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
-import { Box, Button, TextField, Paper, Typography } from '@mui/material';
+import { Box, Button, TextField, Paper } from '@mui/material';
 import { useCreateOrUpdatePolygon } from './hooks/useCreateOrUpdatePolygon';
 import { useDeletePolygon } from './hooks/useDeletePolygon';
 import { useGetMapSession } from './hooks/useGetMapSession';
@@ -144,7 +144,6 @@ const App = () => {
     mapRef.current.on('draw.update', updateArea);
 
     mapRef.current.on('draw.selectionchange', (e) => {
-      const allFeatures = drawRef.current.getAll().features;
       if (e.features.length > 0) {
         setSelectedFeatures(e.features);
         setNameInput(e.features[0].properties?.name || '');
