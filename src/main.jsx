@@ -9,5 +9,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <AppApolloProvider>
       <App />
     </AppApolloProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

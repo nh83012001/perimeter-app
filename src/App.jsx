@@ -26,6 +26,7 @@ const App = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
+  // Update sessionId state if it's not already set
   function updateSessionId(initialPolygonId) {
     if (!sessionIdSetRef.current) {
       setSessionId(initialPolygonId);
@@ -33,6 +34,7 @@ const App = () => {
     }
   }
 
+  // Fetch map session data when component mounts
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionIdFromUrl = params.get('sessionId');
@@ -46,8 +48,9 @@ const App = () => {
     if (sessionIdFromUrl) {
       fetchMapSession();
     }
-  }, []); // Empty dependency array ensures this runs only once
+  }, [getMapSession]);
 
+  // Initialize and configure the map when mapData is available
   useEffect(() => {
     // get the zoom and center from the url params or use default
     const params = new URLSearchParams(window.location.search);
