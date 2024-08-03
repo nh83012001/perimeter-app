@@ -338,7 +338,10 @@ const App = () => {
           <TextField
             fullWidth
             value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
+            onChange={(e) => {
+              setHasChanges(true);
+              setNameInput(e.target.value);
+            }}
             label="Polygon Name"
             variant="outlined"
             size="small"
