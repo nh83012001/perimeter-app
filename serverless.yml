@@ -1,4 +1,4 @@
-service: perimeter-app
+service: perimeter-frontend
 
 provider:
   name: aws
@@ -11,11 +11,11 @@ plugins:
 custom:
   spa:
     files:
-      - source: ./build
+      - source: ./dist
         globs: '**/*'
         headers:
           CacheControl: max-age=300
-      - source: ./build
+      - source: ./dist
         globs: 'index.html'
         headers:
           CacheControl: max-age=300 # 5 minutes
