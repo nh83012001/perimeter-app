@@ -30,30 +30,30 @@ The goal of this project is to create a web application that allows users to cre
 
 1. Clone the repository:
 
-   ```sh
-   git clone git@github.com:nh83012001/perimeter-app.git
-   cd perimeter-app
-   ```
+```bash
+git clone git@github.com:nh83012001/perimeter-app.git
+cd perimeter-app
+```
 
 2. Create an .env file:
 
-   ```sh
-   touch .env
-   ```
+```bash
+touch .env
+```
 
-   And add the following commands
+And add the following commands
 
-   ```
-   VITE_GRAPHQL_ENDPOINT=https://qsb51itvz4.execute-api.us-east-1.amazonaws.com/dev/graphql
-   VITE_MAPBOX_TOKEN=yourMapboxToken
-   ```
+```
+VITE_GRAPHQL_ENDPOINT=https://qsb51itvz4.execute-api.us-east-1.amazonaws.com/dev/graphql
+VITE_MAPBOX_TOKEN=yourMapboxToken
+```
 
 3. Install dependencies and run the development server:
 
-   ```
-   npm install
-   npm run dev
-   ```
+```bash
+npm install
+npm run dev
+```
 
 The application will run locally at [localhost:5173](http://localhost:5173/)
 
@@ -70,7 +70,7 @@ The application will run locally at [localhost:5173](http://localhost:5173/)
 
 Build creates a dist folder. Deploy dev uses serverless and my AWS credentials to deploy.
 
-```
+```bash
 npm run build
 npm run deploy:dev
 ```
