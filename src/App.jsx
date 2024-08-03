@@ -20,12 +20,10 @@ const App = () => {
   const mapRef = useRef();
   const drawRef = useRef();
   const [selectedFeatures, setSelectedFeatures] = useState([]);
-  const [originalFeature, setOriginalFeature] = useState(null);
   const [nameInput, setNameInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
   const [mapData, setMapData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
-  // const [history, setHistory] = useState({}); // story history of each polygons changes
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
   function updateSessionId(initialPolygonId) {
@@ -49,12 +47,6 @@ const App = () => {
       fetchMapSession();
     }
   }, []); // Empty dependency array ensures this runs only once
-
-  useEffect(() => {
-    if (selectedFeatures) {
-      setOriginalFeature({ ...selectedFeatures[0] });
-    }
-  }, [selectedFeatures]);
 
   useEffect(() => {
     // get the zoom and center from the url params or use default
@@ -167,16 +159,6 @@ const App = () => {
         if (e.features[0].properties?.name && selectedFeatures.length === 1) {
           setNameInput(e.features[0].properties?.name);
         }
-        // const feature = e.features[0];
-        //TODO need to ignore the initial create here
-        // setHistory((prevHistory) => {
-        //   const newHistory = { ...prevHistory };
-        //   if (!newHistory[feature.id]) {
-        //     newHistory[feature.id] = [];
-        //   }
-        //   newHistory[feature.id].push({ ...feature });
-        //   return newHistory;
-        // });
       }
     }
   }, [mapData]);
@@ -186,11 +168,15 @@ const App = () => {
     if (selectedFeatures) {
       selectedFeatures[0].properties.name = nameInput;
       selectedFeatures[0].properties.saved = true;
+      const polygonId = selectedFeatures[0]?.properties?.polygonId
+        ? selectedFeatures[0]?.properties?.polygonId // Previously saved and fetched
+        : selectedFeatures[0].properties.id; // new polygon you created
+
       drawRef.current.delete(selectedFeatures[0].id); // delete old feature and put in new one with updated name
       drawRef.current.add(selectedFeatures[0]); // add new feature with updated name
       const input = {
         sessionId: sessionId,
-        polygonId: selectedFeatures[0].id,
+        polygonId: polygonId,
         name: nameInput,
         coordinates: selectedFeatures[0].geometry.coordinates[0],
       };
@@ -239,36 +225,6 @@ const App = () => {
       setNameInput('');
     }
   };
-
-  // true will enable save button
-  // const hasChanges = () => {
-  //   if (!selectedFeature || !originalFeature) return false;
-  //   return (
-  //     nameInput !== originalFeature.properties.name ||
-  //     JSON.stringify(selectedFeature.geometry.coordinates) !==
-  //       JSON.stringify(originalFeature.geometry.coordinates)
-  //   );
-  // };
-
-  // undo last change to currently selected polygon
-  // const handleUndo = () => {
-  //   if (
-  //     selectedFeatures &&
-  //     history[selectedFeatures[0].id] &&
-  //     history[selectedFeatures[0].id].length > 0
-  //   ) {
-  //     const previousState = history[selectedFeatures[0].id].pop();
-  //     // setHistory((prevHistory) => ({
-  //     //   ...prevHistory,
-  //     //   [selectedFeature.id]: [...prevHistory[selectedFeature.id]],
-  //     // }));
-  //     // setHistory([...history]);
-  //     drawRef.current.delete(selectedFeatures[0].id);
-  //     drawRef.current.add(previousState);
-  //     setSelectedFeatures(previousState);
-  //     setNameInput(previousState.properties.name || '');
-  //   }
-  // };
 
   const handleCopyToClipboard = () => {
     if (!sessionId) {
@@ -349,14 +305,6 @@ const App = () => {
           />
 
           <Box display="flex" justifyContent="space-between">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => console.log('undo')}
-              disabled={!hasChanges}
-            >
-              Undo
-            </Button>
             <Button
               variant="contained"
               color="primary"
