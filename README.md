@@ -1,10 +1,8 @@
 # Perimeter frontend
 
-[Cloudfront distro URL](https://dgkpkp27prv85.cloudfront.net/)
-
 # Perimeter Frontend Application
 
-This project is a React web application with mapping functionality using Mapbox, focusing on the creation and manipulation of polygons.
+This project is a React web application that lives at this [Cloudfront distro URL](https://dgkpkp27prv85.cloudfront.net/). It mapping functionality using Mapbox, focusing on the creation and manipulation of polygon features.
 
 ## Table of Contents
 
