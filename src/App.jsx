@@ -159,7 +159,7 @@ const App = () => {
 
     function updateArea(e) {
       // this could be new or old polygon
-      setHasChanges(true);
+      setHasChanges(true); // enable save button
       const data = draw.getAll();
       if (data.features.length > 0) {
         setSelectedFeatures(e.features);
@@ -196,8 +196,13 @@ const App = () => {
         name: nameInput,
         coordinates: selectedFeatures[0].geometry.coordinates[0],
       };
-      await createOrUpdatePolygon(input);
-      setHasChanges(false);
+      const result = await createOrUpdatePolygon(input);
+      // gives alert with the error message if the polygon didn't save in the backend
+      if (result.data?.createOrUpdatePolygon?.startsWith('ERROR')) {
+        alert(result.data.createOrUpdatePolygon);
+        return;
+      }
+      setHasChanges(false); // disable save button
     }
   };
 
