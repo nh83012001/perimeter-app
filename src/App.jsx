@@ -52,11 +52,11 @@ const App = () => {
   useEffect(() => {
     // get the zoom and center from the url params or use default
     const params = new URLSearchParams(window.location.search);
-    const sessionZoom = params.get('zoom'); // fetch zoom from parameter
+    const sessionZoom = params.get('zoom'); // fetch zoom from parameter.
     const sessionCenter = params.get('center'); // fetch center from parameters
     const sessionCenterArray = sessionCenter ? sessionCenter.split(',') : null;
-    const zoomNumber = Number(sessionZoom);
-    let defaultZoom = !isNaN(zoomNumber) ? zoomNumber : 6; // default zoom. Checked and mapbox can accept things like -2, 42, and 20.192038091823. So just need to check it is a number (errors if you provide string)
+    const zoomNumber = sessionZoom ? Number(sessionZoom) : null; // put in because empty tring made it 0
+    let defaultZoom = !isNaN(zoomNumber) && zoomNumber !== 0 ? zoomNumber : 6; // default zoom. Checked and mapbox can accept things like -2, 42, and 20.192038091823. So just need to check it is a number (errors if you provide string)
     let defaultCenter = Array.isArray(sessionCenterArray)
       ? sessionCenterArray
       : [-122.3321, 47.6062]; // default center
