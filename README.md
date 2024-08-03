@@ -35,8 +35,8 @@ The goal of this project is to create a web application that allows users to cre
 1. Clone the repository:
 
    ```sh
-   git clone <git@github.com:nh83012001/perimeter-app.git>
-   cd <perimeter-app>
+   git clone git@github.com:nh83012001/perimeter-app.git
+   cd perimeter-app
    ```
 
 2. Create an .env file:
@@ -49,7 +49,7 @@ The goal of this project is to create a web application that allows users to cre
 
    ```
    VITE_GRAPHQL_ENDPOINT=https://qsb51itvz4.execute-api.us-east-1.amazonaws.com/dev/graphql
-    VITE_MAPBOX_TOKEN=yourMapboxToken
+   VITE_MAPBOX_TOKEN=yourMapboxToken
    ```
 
 3. Install dependencies and run the development server:
