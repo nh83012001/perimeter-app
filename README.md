@@ -31,7 +31,15 @@ Eslint
 
 ## Feature Explanation
 
+### Drawing Polygons
+
+To draw a polygon, use the control on the top right corner of the map that is a square. It is selected if the background is orange and deselected (normal select/move capabilities) if the background is grey.
+
+### Select Multiple
+
 Since mapbox lets you select multiple features and I didn't really want to overwrite it, I gave you the ability to delete multiple polygons at the same time. You select one feature, then press shift, and select additional features. This could be improved by just sending the delete once with an array of polygons to be deleted.
+
+### Trashcan control
 
 The trashcan control lets you delete as you are drawing lines, but also lets you delete features. I went ahead and let you delete from either place.
 
