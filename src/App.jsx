@@ -25,7 +25,6 @@ const App = () => {
   const [sessionId, setSessionId] = useState(null);
   const [mapData, setMapData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
-
   // const [history, setHistory] = useState({}); // story history of each polygons changes
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
@@ -136,6 +135,9 @@ const App = () => {
         drawRef.current.add(geoJsonData);
       });
     }
+    mapRef.current.on('draw.delete', (e) => {
+      handleDelete(e);
+    });
 
     drawRef.current = draw;
     mapRef.current.addControl(draw);
@@ -202,7 +204,19 @@ const App = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (e) => {
+    if (e) {
+      // if being passed in from trashcan button
+      const polygonId = e.features[0]?.properties?.polygonId
+        ? e.features[0]?.properties?.polygonId // Previously saved and fetched
+        : e.features[0].properties.id; // new polygon you created
+      const input = {
+        sessionId,
+        polygonId: polygonId,
+      };
+      await deletePolygon(input);
+      drawRef.current.delete(e.features[0].id);
+    }
     if (selectedFeatures.length > 0) {
       selectedFeatures.forEach(async (feature) => {
         const polygonId = feature.properties.polygonId
@@ -215,7 +229,6 @@ const App = () => {
         await deletePolygon(input);
         drawRef.current.delete(feature.id);
       });
-
       const updatedData = drawRef.current.getAll();
 
       // Update the source data of the map to remove the visual remnants
@@ -275,7 +288,7 @@ const App = () => {
 
   return (
     <>
-      <div ref={mapContainerRef} id="map" style={{ height: '90vh' }}></div>
+      <div ref={mapContainerRef} id="map" style={{ height: '100vh' }}></div>
       <div style={{ position: 'absolute', top: 50, left: 60 }}>
         <Button
           variant="contained"
@@ -299,7 +312,11 @@ const App = () => {
             width: 300,
           }}
         >
-          <Button variant="contained" color="primary" onClick={handleDelete}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleDelete(false)}
+          >
             Delete Multiple
           </Button>
         </Paper>
@@ -337,7 +354,11 @@ const App = () => {
             >
               Undo
             </Button>
-            <Button variant="contained" color="primary" onClick={handleDelete}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => handleDelete(false)}
+            >
               Delete
             </Button>
             <Button
