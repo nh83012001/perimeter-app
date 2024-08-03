@@ -1,8 +1,8 @@
-# React + Vite
+# Perimeter frontend
 
-[URL](https://dgkpkp27prv85.cloudfront.net/)
+[Cloudfront distro URL](https://dgkpkp27prv85.cloudfront.net/)
 
-### Getting Started
+## Getting Started
 
 Add .env file
 VITE_GRAPHQL_ENDPOINT=https://qsb51itvz4.execute-api.us-east-1.amazonaws.com/dev/graphql
@@ -15,7 +15,7 @@ npm run dev
 
 will run locally at [localhost:5173](http://localhost:5173/)
 
-### Tools
+## Tools
 
 React / Vite
 Mapbox
@@ -25,11 +25,11 @@ Apollo Client for server connection and running query/mutation hooks
 Prettier
 Eslint
 
-### API Docs
+## API Docs
 
 - [Mapbox GL Draw tools](https://github.com/mapbox/mapbox-gl-draw/blob/main/docs/API.md) - where controls come from
 
-### Feature Explanation
+## Feature Explanation
 
 Since mapbox lets you select multiple features and I didn't really want to overwrite it, I gave you the ability to delete multiple polygons at the same time. You select one feature, then press shift, and select additional features. This could be improved by just sending the delete once with an array of polygons to be deleted.
 
