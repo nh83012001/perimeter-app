@@ -25,7 +25,7 @@ const App = () => {
   const [sessionId, setSessionId] = useState(null);
   const [mapData, setMapData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
-  // const [history, setHistory] = useState({}); // story history of each polygons changes
+  const [updates, setUpdates] = useState([]); // story history of each polygons and name change
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
   function updateSessionId(initialPolygonId) {
@@ -34,6 +34,8 @@ const App = () => {
       sessionIdSetRef.current = true; // Mark sessionId as set
     }
   }
+  console.log('original feature', originalFeature);
+  console.log('selected feature', selectedFeatures);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -152,6 +154,7 @@ const App = () => {
       } else {
         setSelectedFeatures([]);
         setNameInput('');
+        setUpdates([]); // clear history
       }
     });
 
@@ -167,6 +170,7 @@ const App = () => {
         if (e.features[0].properties?.name && selectedFeatures.length === 1) {
           setNameInput(e.features[0].properties?.name);
         }
+        { type: 'name', value: nameInput }
         // const feature = e.features[0];
         //TODO need to ignore the initial create here
         // setHistory((prevHistory) => {
@@ -340,6 +344,7 @@ const App = () => {
             value={nameInput}
             onChange={(e) => {
               setHasChanges(true);
+              setUpdates([...updates, { type: 'name', value: nameInput }]);
               setNameInput(e.target.value);
             }}
             label="Polygon Name"
