@@ -2,7 +2,7 @@ import './App.css';
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
-import { Box, Button, TextField, Paper } from '@mui/material';
+import { Box, Button, TextField, Paper, Typography } from '@mui/material';
 import { useCreateOrUpdatePolygon } from './hooks/useCreateOrUpdatePolygon';
 import { useDeletePolygon } from './hooks/useDeletePolygon';
 import { useGetMapSession } from './hooks/useGetMapSession';
@@ -245,16 +245,43 @@ const App = () => {
 
   return (
     <>
-      <div ref={mapContainerRef} id="map" style={{ height: '100vh' }}></div>
-      <div style={{ position: 'absolute', top: 50, left: 60 }}>
+      <div ref={mapContainerRef} id="map" style={{ height: '95vh' }}></div>
+      <div
+        style={{
+          position: 'absolute',
+          top: 50,
+          left: 60,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+        }}
+      >
         <Button
           variant="contained"
           color="primary"
           startIcon={<ContentCopyIcon />}
           onClick={handleCopyToClipboard}
+          style={{ marginBottom: '10px' }}
         >
           Copy map link
         </Button>
+        {selectedFeatures.length == 1 && (
+          <Paper style={{ width: '400px', padding: '10px' }}>
+            <Typography
+              style={{
+                fontSize: '14px',
+                lineHeight: '1.5',
+                color: '#333',
+                textAlign: 'left',
+              }}
+            >
+              EDIT POLYGON: If you hover over a polygon point, it should change
+              to the hand (cursor type of pointer) which means it is clickable.
+              Click on the point and drag to new location. Press save when
+              complete.
+            </Typography>
+          </Paper>
+        )}
       </div>
 
       {selectedFeatures.length > 1 && (
