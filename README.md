@@ -18,11 +18,11 @@ This project is a React web application with mapping functionality using Mapbox,
 8. [Next Ideas](#next-ideas)
 9. [Undo Functionality](#undo-functionality)
 
-## 1. Introduction
+## Introduction
 
 The goal of this project is to create a web application that allows users to create, manipulate, and manage polygons on a map. Users can save polygons with names, edit them, and view all created polygons.
 
-## 2. Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -61,7 +61,7 @@ The goal of this project is to create a web application that allows users to cre
 
 The application will run locally at [localhost:5173](http://localhost:5173/)
 
-## 3. Features
+## Features
 
 - View and navigate the map
 - Create polygons by adding a minimum of 3 points
@@ -70,7 +70,7 @@ The application will run locally at [localhost:5173](http://localhost:5173/)
 - Edit previously created polygons
 - Delete multiple polygons
 
-## 4. Deployment
+## Deployment
 
 Build creates a dist folder. Deploy dev uses serverless and my AWS credentials to deploy.
 
@@ -79,7 +79,7 @@ npm run build
 npm run deploy:dev
 ```
 
-## 5. Tools and Technologies
+## Tools and Technologies
 
 - React / Vite
 - Mapbox
@@ -89,7 +89,7 @@ npm run deploy:dev
 - Prettier
 - Eslint
 
-## 6. API Documentation
+## API Documentation
 
 - [Backend Service](https://github.com/nh83012001/perimeter-service)
 - [Mapbox GL Draw tools](https://github.com/mapbox/mapbox-gl-draw/blob/main/docs/API.md) - where controls come from
