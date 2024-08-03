@@ -249,8 +249,8 @@ const App = () => {
       <div
         style={{
           position: 'absolute',
-          top: 50,
-          left: 60,
+          top: 20,
+          left: 50,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
@@ -266,7 +266,7 @@ const App = () => {
           Copy map link
         </Button>
         {selectedFeatures.length == 1 && (
-          <Paper style={{ width: '400px', padding: '10px' }}>
+          <Paper style={{ width: '350px', padding: '10px' }}>
             <Typography
               style={{
                 fontSize: '14px',
@@ -275,10 +275,14 @@ const App = () => {
                 textAlign: 'left',
               }}
             >
-              EDIT POLYGON: If you hover over a polygon point, it should change
-              to the hand (cursor type of pointer) which means it is clickable.
-              Click on the point and drag to new location. Press save when
-              complete.
+              Edit Polygon Point: When you hover over a point of the polygon,
+              the cursor should change to a pointer (hand icon), indicating that
+              the point is clickable. Click on the point and drag it to a new
+              location.
+              <br />
+              Move Polygon: Click inside the polygon or on its edge and drag the
+              entire polygon to a new location. <br />
+              Press &apos;Save&apos; when done.
             </Typography>
           </Paper>
         )}
@@ -290,7 +294,7 @@ const App = () => {
           style={{
             position: 'absolute',
             bottom: 70,
-            left: 60,
+            left: 50,
             padding: 15,
             backgroundColor: 'white',
             width: 300,
@@ -312,7 +316,7 @@ const App = () => {
           style={{
             position: 'absolute',
             bottom: 70,
-            left: 70,
+            left: 60,
             padding: 15,
             backgroundColor: 'white',
             width: 300,
