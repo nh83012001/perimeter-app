@@ -12,21 +12,20 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
 const App = () => {
-  const { createOrUpdatePolygon } = useCreateOrUpdatePolygon();
-  const { deletePolygon } = useDeletePolygon();
-  const { getMapSession } = useGetMapSession();
-  // TODO check for params in url for sessionID and fetch data from server
-  const mapContainerRef = useRef();
-  const mapRef = useRef();
-  const drawRef = useRef();
-  const [selectedFeatures, setSelectedFeatures] = useState([]);
-  const [nameInput, setNameInput] = useState('');
-  const [sessionId, setSessionId] = useState(null);
-  const [mapData, setMapData] = useState(null);
-  const [hasChanges, setHasChanges] = useState(false);
+  const { createOrUpdatePolygon } = useCreateOrUpdatePolygon(); // custom hook to create or update polygon
+  const { deletePolygon } = useDeletePolygon(); // custom hook to delete polygon
+  const { getMapSession } = useGetMapSession(); // custom hook to get polygons from the server
+  const mapContainerRef = useRef(); // ref for div DOM element where the Mapbox map will be rendered. The mapContainerRef.current is passed to the container property when initializing the Mapbox map to specify where the map should be rendered.
+  const mapRef = useRef(); // ref to store mapbox instance. When the map is initialized, the mapRef.current is set to the newly created Mapbox map object
+  const drawRef = useRef(); // ref to store the MapboxDraw instance (draw polygon, delete feature). We add
+  const [selectedFeatures, setSelectedFeatures] = useState([]); // Hold all the features you have selected on the map
+  const [nameInput, setNameInput] = useState(''); // Name of the polygon
+  const [sessionId, setSessionId] = useState(null); // the user session for the map
+  const [mapData, setMapData] = useState(null); // Just the polygons received from the server
+  const [hasChanges, setHasChanges] = useState(false); // tracking changes to name and polygon to enable save button
   const sessionIdSetRef = useRef(false); // Ref to track if sessionId has been set
 
-  // Update sessionId state if it's not already set
+  // Update sessionId state if it's not already set. This would get run if you create your first polygon in a new session
   function updateSessionId(initialPolygonId) {
     if (!sessionIdSetRef.current) {
       setSessionId(initialPolygonId);
@@ -39,7 +38,6 @@ const App = () => {
     const params = new URLSearchParams(window.location.search);
     const sessionIdFromUrl = params.get('sessionId');
     setSessionId(sessionIdFromUrl);
-
     const fetchMapSession = async () => {
       const input = { sessionId: sessionIdFromUrl };
       const response = await getMapSession(input);
@@ -48,17 +46,20 @@ const App = () => {
     if (sessionIdFromUrl) {
       fetchMapSession();
     }
-  }, [getMapSession]);
+  }, []);
 
   // Initialize and configure the map when mapData is available
   useEffect(() => {
     // get the zoom and center from the url params or use default
     const params = new URLSearchParams(window.location.search);
-    const sessionZoom = params.get('zoom');
-    const sessionCenter = params.get('center');
+    const sessionZoom = params.get('zoom'); // fetch zoom from parameter
+    const sessionCenter = params.get('center'); // fetch center from parameters
     const sessionCenterArray = sessionCenter ? sessionCenter.split(',') : null;
-    let defaultZoom = sessionZoom || 6; // default zoom
-    let defaultCenter = sessionCenterArray || [-122.3321, 47.6062]; // default center
+    const zoomNumber = Number(sessionZoom);
+    let defaultZoom = !isNaN(zoomNumber) ? zoomNumber : 6; // default zoom. Checked and mapbox can accept things like -2, 42, and 20.192038091823. So just need to check it is a number (errors if you provide string)
+    let defaultCenter = Array.isArray(sessionCenterArray)
+      ? sessionCenterArray
+      : [-122.3321, 47.6062]; // default center
 
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -125,8 +126,6 @@ const App = () => {
             'fill-opacity': 0.4,
           },
         });
-        // }
-
         drawRef.current.add(geoJsonData);
       });
     }
@@ -167,15 +166,15 @@ const App = () => {
   }, [mapData]);
 
   // TODO there should be a better way to overwrite the feature name for the polygon than a delete/add
+  // Save the polygon - could be initial create or updating an existing polygon
   const handleSave = async () => {
     if (selectedFeatures) {
       selectedFeatures[0].properties.name = nameInput;
       selectedFeatures[0].properties.saved = true;
       const polygonId = selectedFeatures[0]?.properties?.polygonId
-        ? selectedFeatures[0]?.properties?.polygonId // Previously saved and fetched
-        : selectedFeatures[0].properties.id; // new polygon you created
-
-      drawRef.current.delete(selectedFeatures[0].id); // delete old feature and put in new one with updated name
+        ? selectedFeatures[0]?.properties?.polygonId // Previously saved and fetched so polygonId isn't recreated
+        : selectedFeatures[0].id; // new polygon you created so we use mapbox id
+      drawRef.current.delete(selectedFeatures[0].id); // delete old feature
       drawRef.current.add(selectedFeatures[0]); // add new feature with updated name
       const input = {
         sessionId: sessionId,
@@ -193,12 +192,13 @@ const App = () => {
     }
   };
 
+  // Could be deleting a single or multiple polygons
   const handleDelete = async (e) => {
     if (e) {
       // if being passed in from trashcan button
       const polygonId = e.features[0]?.properties?.polygonId
         ? e.features[0]?.properties?.polygonId // Previously saved and fetched
-        : e.features[0].properties.id; // new polygon you created
+        : e.features[0].id; // new polygon you created
       const input = {
         sessionId,
         polygonId: polygonId,
@@ -229,6 +229,7 @@ const App = () => {
     }
   };
 
+  // When you click the copy link button, we create the link. This is to get the current zoom/center and not have to track it
   const handleCopyToClipboard = () => {
     if (!sessionId) {
       // I could also make sure that you have at least one feature
@@ -295,16 +296,13 @@ const App = () => {
         >
           <br />
           <TextField
-            fullWidth
             value={nameInput}
             onChange={(e) => {
               setHasChanges(true);
               setNameInput(e.target.value);
             }}
             label="Polygon Name"
-            variant="outlined"
-            size="small"
-            style={{ marginBottom: 15 }}
+            style={{ marginBottom: '18px' }}
           />
 
           <Box display="flex" justifyContent="space-between">
