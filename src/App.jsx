@@ -132,13 +132,10 @@ const App = () => {
     mapRef.current.on('draw.delete', (e) => {
       handleDelete(e);
     });
-
     drawRef.current = draw;
     mapRef.current.addControl(draw);
-
     mapRef.current.on('draw.create', updateArea);
     mapRef.current.on('draw.update', updateArea);
-
     mapRef.current.on('draw.selectionchange', (e) => {
       if (e.features.length > 0) {
         setSelectedFeatures(e.features);

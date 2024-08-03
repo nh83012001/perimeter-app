@@ -1,5 +1,20 @@
 # React + Vite
 
+[URL](https://dgkpkp27prv85.cloudfront.net/)
+
+### Getting Started
+
+Add .env file
+VITE_GRAPHQL_ENDPOINT=https://qsb51itvz4.execute-api.us-east-1.amazonaws.com/dev/graphql
+VITE_MAPBOX_TOKEN=yourMapboxToken
+
+```
+npm install
+npm run dev
+```
+
+will run locally at [localhost:5173](http://localhost:5173/)
+
 ### Tools
 
 React / Vite
@@ -19,8 +34,19 @@ Since mapbox lets you select multiple features and I didn't really want to overw
 
 The trashcan control lets you delete as you are drawing lines, but also lets you delete features. I went ahead and let you delete from either place.
 
+### Deploying
+
+Build creates a dist folder. Deploy dev uses serverless and my AWS credentials to deploy.
+
+```
+npm run build
+npm run deploy:dev
+```
+
 ### Next Ideas
 
-- Disable the share link whenever you don't have any polygons saved
-- Work on making the controls more clear
-- [Snackbars](https://mui.com/material-ui/react-snackbar/) when you get successful save, update, delete. Plus either a snackbar or animation when you copy to clipboard
+- Code maintainability: Break out into separate components like map container, link button, edit/create popup
+- Feature: Default apollo caching is in there. I would consider doing a write to cache forgetMapSession query on update/delete. Then I could just always be reading from that query on load.
+- Feature: Disable the share link whenever you don't have any polygons saved
+- Feature: Work on making the controls more clear
+- Feature: [Snackbars](https://mui.com/material-ui/react-snackbar/) when you get successful save, update, delete. Plus either a snackbar or animation when you copy to clipboard
