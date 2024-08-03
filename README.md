@@ -35,7 +35,7 @@ Since mapbox lets you select multiple features and I didn't really want to overw
 
 The trashcan control lets you delete as you are drawing lines, but also lets you delete features. I went ahead and let you delete from either place.
 
-### Deploying
+## Deploying
 
 Build creates a dist folder. Deploy dev uses serverless and my AWS credentials to deploy.
 
@@ -44,7 +44,7 @@ npm run build
 npm run deploy:dev
 ```
 
-### Next Ideas
+## Next Ideas
 
 - Code maintainability: Break out into separate components like map container, link button, edit/create form popup
 - Code maintainability: circleCI and an analysis tool (like Code Climate)
@@ -53,7 +53,7 @@ npm run deploy:dev
 - Feature: Work on making the controls more clear
 - Feature: [Snackbars](https://mui.com/material-ui/react-snackbar/) when you get successful save, update, delete. Plus either a snackbar or animation when you copy to clipboard
 
-### Undo Functionality
+## Undo Functionality
 
 I had a `feature/undo` branch where I was implementing what I thought would be a good experience for the undo in the screenshot for at the end of the code challenge. The way this was working is that the undo would track all the updates you make to the name and selected feature.
 
