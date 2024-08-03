@@ -6,6 +6,7 @@ import { Box, Button, TextField, Paper, Typography } from '@mui/material';
 import { useCreateOrUpdatePolygon } from './hooks/useCreateOrUpdatePolygon';
 import { useDeletePolygon } from './hooks/useDeletePolygon';
 import { useGetMapSession } from './hooks/useGetMapSession';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
@@ -73,7 +74,6 @@ const App = () => {
     let geoJsonData = null;
     if (mapData && mapData.getMapSession) {
       const { polygons } = mapData.getMapSession;
-      console.log('polygons', polygons);
       if (polygons.length > 0) {
         geoJsonData = {
           type: 'FeatureCollection',
@@ -90,10 +90,8 @@ const App = () => {
             },
           })),
         };
-        console.log('geoJsonData', geoJsonData);
       }
     }
-    console.log('geoJsonData', geoJsonData);
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -147,7 +145,6 @@ const App = () => {
 
     mapRef.current.on('draw.selectionchange', (e) => {
       const allFeatures = drawRef.current.getAll().features;
-      console.log('allFeatures = ', allFeatures);
       if (e.features.length > 0) {
         setSelectedFeatures(e.features);
         setNameInput(e.features[0].properties?.name || '');
@@ -261,7 +258,12 @@ const App = () => {
   //   }
   // };
 
-  const generateShareLink = () => {
+  const handleCopyToClipboard = () => {
+    if (!sessionId) {
+      // I could also make sure that you have at least one feature
+      alert('Please save to the map before copying the link');
+      return;
+    }
     const zoom = mapRef.current ? mapRef.current.getZoom() : 6; // Default zoom if mapRef is not initialized
     const center = mapRef.current
       ? mapRef.current.getCenter().toArray()
@@ -269,19 +271,21 @@ const App = () => {
     const shareLink = `${window.location.origin}${
       window.location.pathname
     }?sessionId=${sessionId}&zoom=${zoom}&center=${center.join(',')}`;
-    return shareLink;
+    navigator.clipboard.writeText(shareLink);
   };
 
   return (
     <>
       <div ref={mapContainerRef} id="map" style={{ height: '90vh' }}></div>
-      <div style={{ position: 'absolute', bottom: 20, left: 70 }}>
-        <Typography variant="body2">
-          Share this map:{' '}
-          <a target="_blank" href={generateShareLink()}>
-            Link
-          </a>
-        </Typography>
+      <div style={{ position: 'absolute', top: 50, left: 60 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<ContentCopyIcon />}
+          onClick={handleCopyToClipboard}
+        >
+          Copy map link
+        </Button>
       </div>
 
       {selectedFeatures.length > 1 && (
@@ -290,7 +294,7 @@ const App = () => {
           style={{
             position: 'absolute',
             bottom: 70,
-            left: 70,
+            left: 60,
             padding: 15,
             backgroundColor: 'white',
             width: 300,
