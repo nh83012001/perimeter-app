@@ -1,6 +1,6 @@
 # Perimeter Frontend
 
-This project is a React web application that lives at this [Cloudfront distro URL](https://dgkpkp27prv85.cloudfront.net/). It mapping functionality using Mapbox, focusing on the creation and manipulation of polygon features.
+This project is a React web application that lives at this [Cloudfront distro URL](https://dgkpkp27prv85.cloudfront.net/). It's a mapping application using Mapbox, to create and manipulate polygon features.
 
 ## Table of Contents
 
@@ -112,6 +112,7 @@ The trashcan control lets you delete as you are drawing lines, but also lets you
 - **Feature:** Disable the share link whenever you don't have any polygons saved
 - **Feature:** Work on making the controls more clear
 - **Feature:** [Snackbars](https://mui.com/material-ui/react-snackbar/) when you get successful save, update, delete. Plus either a snackbar or animation when you copy to clipboard
+- **Bug:** If you load map data and delete, you keep a greyed out polygon.
 
 ## Undo Functionality
 
