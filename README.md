@@ -41,7 +41,7 @@ cd perimeter-app
 touch .env
 ```
 
-And add the following commands
+And add the following variables
 
 ```
 VITE_GRAPHQL_ENDPOINT=https://qsb51itvz4.execute-api.us-east-1.amazonaws.com/dev/graphql
