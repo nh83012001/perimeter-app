@@ -7,7 +7,7 @@ import { useCreateOrUpdatePolygon } from './hooks/useCreateOrUpdatePolygon';
 import { useDeletePolygon } from './hooks/useDeletePolygon';
 import { useGetMapSession } from './hooks/useGetMapSession';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-
+import { isValidCenterArray, isValidZoom } from './utils';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
@@ -55,9 +55,8 @@ const App = () => {
     const sessionZoom = params.get('zoom'); // fetch zoom from parameter.
     const sessionCenter = params.get('center'); // fetch center from parameters
     const sessionCenterArray = sessionCenter ? sessionCenter.split(',') : null;
-    const zoomNumber = sessionZoom ? Number(sessionZoom) : null; // put in because empty tring made it 0
-    let defaultZoom = !isNaN(zoomNumber) && zoomNumber !== 0 ? zoomNumber : 6; // default zoom. Checked and mapbox can accept things like -2, 42, and 20.192038091823. So just need to check it is a number (errors if you provide string)
-    let defaultCenter = Array.isArray(sessionCenterArray)
+    let defaultZoom = isValidZoom(sessionZoom) ? Number(sessionZoom) : 6; // default zoom. Checked and mapbox can accept things like -2, 42, and 20.192038091823. So just need to check it is a number (errors if you provide string)
+    let defaultCenter = isValidCenterArray(sessionCenterArray)
       ? sessionCenterArray
       : [-122.3321, 47.6062]; // default center
 
