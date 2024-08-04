@@ -46,6 +46,8 @@ const App = () => {
     if (sessionIdFromUrl) {
       fetchMapSession();
     }
+    // Only running on first render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initialize and configure the map when mapData is available
@@ -159,6 +161,8 @@ const App = () => {
         }
       }
     }
+    // Disabling because I am adding listeners to the mapref that are causing this error.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapData]);
 
   // TODO there should be a better way to overwrite the feature name for the polygon than a delete/add
@@ -276,8 +280,8 @@ const App = () => {
             >
               Edit Polygon Point: When you hover over a point of the polygon,
               the cursor should change to a pointer (hand icon), indicating that
-              the point is clickable. Click on the point and drag it to a new
-              location.
+              the point is clickable. Click on the point to switch to editing
+              the vertex, then click and drag it to a new location.
               <br />
               Move Polygon: Click inside the polygon or on its edge and drag the
               entire polygon to a new location. <br />
@@ -333,16 +337,11 @@ const App = () => {
           />
 
           <Box display="flex" justifyContent="space-between">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleDelete(false)}
-            >
+            <Button variant="contained" onClick={() => handleDelete(false)}>
               Delete
             </Button>
             <Button
               variant="contained"
-              color="primary"
               onClick={handleSave}
               disabled={!hasChanges || nameInput === ''}
             >

@@ -113,6 +113,8 @@ The trashcan control lets you delete as you are drawing lines, but also lets you
 - **Feature:** Work on making the controls more clear
 - **Feature:** [Snackbars](https://mui.com/material-ui/react-snackbar/) when you get successful save, update, delete. Plus either a snackbar or animation when you copy to clipboard
 - **Bug:** If you load map data and delete, you keep a greyed out polygon.
+- **Styling:** I normally use material-ui and bring in a theme with a color pallette and a few overrides I like.
+- **Styling:** Make the form to update the polygon inside of a mapbox popup
 
 ## Undo Functionality
 
